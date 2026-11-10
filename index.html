@@ -109,6 +109,10 @@ li.wrap{display:block}
 .upl{display:inline-block}
 .upl:focus-within{outline:2px solid var(--neon);outline-offset:2px}
 .sndpanel{border:1px solid var(--neon);border-radius:10px;padding:14px 16px;margin:12px 0 16px;background:var(--panel);box-shadow:0 0 10px var(--neon-soft)}
+.prog{margin-bottom:14px}
+.progtxt{font-size:.9rem;margin-bottom:6px}
+.bar{height:10px;border:1px solid var(--neon);border-radius:6px;overflow:hidden;background:#000}
+.bar span{display:block;height:100%;background:var(--neon);box-shadow:0 0 8px var(--neon)}
 .srow{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
 .srow label{flex:1 1 150px}
 .srow select.dl{flex:1 1 140px;min-width:0}
@@ -272,6 +276,9 @@ function validSugg(){
     var u=findSub(t,it.u);return u&&!u.done&&!u.added;
   });
 }
+function progHtml(dn,tot,pct){
+  return '<div class="prog"><div class="progtxt">'+dn+' de '+tot+' misiones anuales completadas ('+pct+'%)</div><div class="bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><span style="width:'+pct+'%"></span></div></div>';
+}
 function dueHtml(t){
   if(!t.due)return "";
   var today=ymd(new Date());
@@ -327,11 +334,11 @@ function render(){
     var list=state.tasks[s.id];
     var pending=list.filter(function(t){return !t.done}).length;
     var sorted=list.filter(function(t){return t.done}).concat(list.filter(function(t){return !t.done}).sort(function(a,b){return (a.due||"9999").localeCompare(b.due||"9999")}));
-    var open=state.open[s.id];
+    var open=state.open[s.id];var tot=list.length,dn=tot-pending,pct=tot?Math.round(dn*100/tot):0;
     html+='<section class="sec'+(open?' open':'')+'">'+
       '<button class="head" data-a="toggle" data-s="'+s.id+'" aria-expanded="'+(!!open)+'">'+
-      '<span>'+s.name+'</span><span><span class="count">'+pending+' pendientes</span><span class="arrow">▸</span></span></button>'+
-      '<div class="body"><div class="add"><input id="in-'+s.id+'" placeholder="Escribí tu misión" maxlength="200"><span class="calw"><span class="calbox">'+CAL+'</span><input type="date" id="dl-'+s.id+'" class="dpick" title="Fecha límite (opcional)" aria-label="Fecha límite (opcional)"></span><span class="meta" id="dlt-'+s.id+'"></span>'+'<label class="rep"><input type="checkbox" id="rp-'+s.id+'" class="chk"> Repetir</label>'+
+      '<span>'+s.name+'</span><span><span class="count">'+(s.id==="anual"&&tot?pct+'% · ':'')+pending+' pendientes</span><span class="arrow">▸</span></span></button>'+
+      '<div class="body">'+(s.id==="anual"&&tot?progHtml(dn,tot,pct):'')+'<div class="add"><input id="in-'+s.id+'" placeholder="Escribí tu misión" maxlength="200"><span class="calw"><span class="calbox">'+CAL+'</span><input type="date" id="dl-'+s.id+'" class="dpick" title="Fecha límite (opcional)" aria-label="Fecha límite (opcional)"></span><span class="meta" id="dlt-'+s.id+'"></span>'+'<label class="rep"><input type="checkbox" id="rp-'+s.id+'" class="chk"> Repetir</label>'+
       '<button data-a="add" data-s="'+s.id+'">Agregar</button></div><ul>';
     if(!sorted.length){html+='<li class="empty" style="border:0">Todavía no hay misiones.</li>';}
     sorted.forEach(function(t){html+=renderTask(s.id,t);});
